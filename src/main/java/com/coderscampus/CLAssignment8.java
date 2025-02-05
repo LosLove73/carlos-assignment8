@@ -83,6 +83,5 @@ public class CLAssignment8 {
         CLAssignment8 carlosAssignment = new CLAssignment8();
         carlosAssignment.fetchDataAsynchronously();
     }
-    
-    // this was some bull!
+
 }
