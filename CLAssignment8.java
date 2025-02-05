@@ -83,7 +83,4 @@ public class CLAssignment8 {
         CLAssignment8 carlosAssignment = new CLAssignment8();
         carlosAssignment.fetchDataAsynchronously();
     }
-    // finished it
-    // this is what we can do
-    // this is all just another test
 }
