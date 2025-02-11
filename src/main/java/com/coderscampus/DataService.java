@@ -11,41 +11,36 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DataService {
-	private final Assignment8Starter dataProvider;
-	
-	public DataService() {
-		this.dataProvider = new Assignment8Starter();
-	}
-	
-	public void fetchDataAsynchronously() {
-		int availableProcessors = Runtime.getRuntime().availableProcessors();
-		ExecutorService executor = Executors.newFixedThreadPool(availableProcessors);
-		List<Integer> allNumbers = Collections.synchronizedList(new ArrayList<>());
-		
-		// Estimate number of fetch calls based on data size
-		int totalNumbers = dataProvider.getNumbers().size();
-		int batchSize = 1000;
-		int totalBatches = (int) Math.ceil((double) totalNumbers / batchSize);
-		
-		// Create asynchronous tasks for each batch
-		List<CompletableFuture<Void>> futures = IntStream.range(0, totalBatches)
-				.mapToObj(i -> CompletableFuture.supplyAsync(dataProvider::getNumbers, executor)
-						.thenAccept(allNumbers::addAll))
-				.collect(Collectors.toList());
-		
-		// Wait for all tasks to complete
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-		
-		// Count occurrences of each number
-		Map<Integer, Long> countMap = allNumbers.stream()
-				.collect(Collectors.groupingBy(n -> n, Collectors.counting()));
-		
-		// Print results
-		IntStream.rangeClosed(1, 10)
-			.forEach(i -> System.out.println(i + "=" + countMap.getOrDefault(i, 0L)));
-		
-		executor.shutdown();
-		
-	}
+    private final Assignment8Starter assignment8;
+    private final ExecutorService executor;
+    private final List<Integer> allNumbers;
 
+    public DataService() {
+        this.assignment8 = new Assignment8Starter();
+        this.executor = Executors.newFixedThreadPool(75); // Further increased thread pool for faster execution
+        this.allNumbers = Collections.synchronizedList(new ArrayList<>());
+    }
+
+    public void processData() {
+        List<CompletableFuture<Void>> futures = IntStream.range(0, 1000)
+                .mapToObj(i -> CompletableFuture.runAsync(() -> {
+                    List<Integer> numbersBatch = assignment8.getNumbers();
+                    if (!numbersBatch.isEmpty()) {
+                        allNumbers.addAll(numbersBatch);
+                    }
+                }, executor))
+                .collect(Collectors.toList());
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        countOccurrences();
+        executor.shutdown();
+    }
+
+    private void countOccurrences() {
+        Map<Integer, Long> countMap = allNumbers.stream()
+                .collect(Collectors.groupingBy(n -> n, Collectors.counting()));
+
+        IntStream.rangeClosed(1, 10)
+                .forEach(i -> System.out.println(i + "=" + countMap.getOrDefault(i, 0L)));
+    }
 }

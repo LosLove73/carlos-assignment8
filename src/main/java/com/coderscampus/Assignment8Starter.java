@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Assignment8Starter {
-    private List<Integer> numbers = null;
-    private AtomicInteger i = new AtomicInteger(0);
+    private List<Integer> numbers = null; // stores all numbers that the program needs from the file
+    private AtomicInteger i = new AtomicInteger(0); // thread safe counter that keeps track of how many numbers have been processed
 
     public Assignment8Starter() {
         try {
@@ -19,8 +19,8 @@ public class Assignment8Starter {
             // and place the file in the root of your Java project
             numbers = Files.readAllLines(Paths.get("output.txt"))
                     .stream()
-                    .map(n -> Integer.parseInt(n))
-                    .collect(Collectors.toList());
+                    .map(n -> Integer.parseInt(n)) // converts each line into a number
+                    .collect(Collectors.toList()); // collects numbers into a list
         } catch (IOException e) {
             e.printStackTrace();
         }
