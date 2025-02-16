@@ -8,7 +8,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class DataService {
     private final Assignment8Starter assignment8;
@@ -17,30 +16,37 @@ public class DataService {
 
     public DataService() {
         this.assignment8 = new Assignment8Starter();
-        this.executor = Executors.newFixedThreadPool(75); // Further increased thread pool for faster execution
+        this.executor = Executors.newCachedThreadPool(); // Auto-scales threads more efficient than using a fixedThreadPool.
         this.allNumbers = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void processData() {
-        List<CompletableFuture<Void>> futures = IntStream.range(0, 1000)
-                .mapToObj(i -> CompletableFuture.runAsync(() -> {
-                    List<Integer> numbersBatch = assignment8.getNumbers();
-                    if (!numbersBatch.isEmpty()) {
-                        allNumbers.addAll(numbersBatch);
-                    }
-                }, executor))
-                .collect(Collectors.toList());
+        List<CompletableFuture<List<Integer>>> tasks = new ArrayList<>();
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        for (int i = 0; i < 1000; i++) {
+            CompletableFuture<List<Integer>> task = CompletableFuture.supplyAsync(() -> assignment8.getNumbers(), executor);
+            tasks.add(task);
+        }
+
+        // Collect results after all tasks finish
+        List<Integer> allFetchedNumbers = tasks.stream()
+            .map(CompletableFuture::join) // Waits for each future to complete
+            .flatMap(List::stream) // Flattens the lists into a single list
+            .collect(Collectors.toList());
+
+        allNumbers.addAll(allFetchedNumbers); // Add safely after processing
+
         countOccurrences();
         executor.shutdown();
     }
+
 
     private void countOccurrences() {
         Map<Integer, Long> countMap = allNumbers.stream()
                 .collect(Collectors.groupingBy(n -> n, Collectors.counting()));
 
-        IntStream.rangeClosed(1, 10)
-                .forEach(i -> System.out.println(i + "=" + countMap.getOrDefault(i, 0L)));
+        for (int i = 1; i <= 10; i++) { // Standard for-loop instead of IntStream
+            System.out.println(i + "=" + countMap.getOrDefault(i, 0L));
+        }
     }
 }
