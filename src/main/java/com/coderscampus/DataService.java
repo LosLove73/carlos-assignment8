@@ -45,8 +45,9 @@ public class DataService {
         Map<Integer, Long> countMap = allNumbers.stream()
                 .collect(Collectors.groupingBy(n -> n, Collectors.counting()));
 
-        for (int i = 1; i <= 14; i++) { // Standard for-loop instead of IntStream
-            System.out.println(i + "=" + countMap.getOrDefault(i, 0L));
-        }
+        countMap.entrySet().stream()  // Stream through all key-value pairs
+                .sorted(Map.Entry.comparingByKey()) // Sort by number
+                .forEach(entry -> System.out.println(entry.getKey() + "=" + entry.getValue()));
     }
+
 }
